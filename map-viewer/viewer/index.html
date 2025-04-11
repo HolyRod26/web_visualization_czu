@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Map Viewer</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Temperature Data Map Visualization</title>
+  </head>
+  <body>
+    <div id="content">
+      <div id="map"></div>
+      <div id="sideContent">
+        <div id="info"></div>
+        <div id="selection">
+          <label for="monthSelect">Date:</label>
+          <select id="monthSelect"></select>
+        </div>
+        <div id="temperatureTable"></div>
+        <div id="chartContainer">
+          <canvas id="temperatureChart"></canvas>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="./map-viewer.js"></script>
+  </body>
+</html>

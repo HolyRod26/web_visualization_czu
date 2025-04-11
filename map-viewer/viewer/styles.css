@@ -1,0 +1,52 @@
+@import "./node_modules/ol/ol.css";
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap'); /* Importing Roboto font */
+
+html, body {
+margin: 0;
+height: 100%;
+display: flex;
+flex-direction: column;
+font-family: 'Roboto', sans-serif; /* Applying Roboto font to the entire page */
+}
+
+#content {
+display: flex;
+flex: 1;
+overflow: hidden;
+}
+
+#sideContent, #map {
+width: 50%;
+overflow: auto;
+}
+
+#info, #selection, #temperatureTable, #chartContainer {
+margin: 20px;
+}
+
+#temperatureTable {
+background-color: #f9f9f9; /* Light grey background */
+border-radius: 8px; /* Rounded corners */
+box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+padding: 10px; /* Internal padding */
+border-collapse: collapse;
+overflow: hidden;
+}
+
+#temperatureTable th, #temperatureTable td {
+padding: 12px; /* Padding inside table cells */
+border-bottom: 1px solid #ddd; /* Bottom border for table rows */
+}
+
+#temperatureTable th {
+background-color: #e0e0e0; /* Subtle background for headers */
+font-weight: 500; /* Medium font weight */
+}
+
+#temperatureTable tr:hover {
+background-color: #f1f1f1; /* Background change on hover */
+}
+
+#chartContainer {
+padding: 20px;
+}

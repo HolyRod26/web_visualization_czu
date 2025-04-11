@@ -1,0 +1,10 @@
+{
+"type": "FeatureCollection",
+"name": "locations",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "name": "Sněžka", "id": "snezka" }, "geometry": { "type": "Point", "coordinates": [ 15.74, 50.74 ] } },
+{ "type": "Feature", "properties": { "name": "Pálava", "id": "palava" }, "geometry": { "type": "Point", "coordinates": [ 16.64, 48.84 ] } },
+{ "type": "Feature", "properties": { "name": "Komorní hůrka", "id": "komorni_hurka" }, "geometry": { "type": "Point", "coordinates": [ 12.34, 50.1 ] } }
+]
+}
