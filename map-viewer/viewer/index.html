@@ -2,25 +2,33 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Map Viewer</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Temperature Data Map Visualization</title>
+    <link rel="stylesheet" href="styles.css" />
+    <!-- Load the necessary OpenLayers and Chart.js libraries -->
   </head>
   <body>
+    <header>
+      <h1>Time series visualization</h1>
+    </header>
     <div id="content">
       <div id="map"></div>
       <div id="sideContent">
-        <div id="info"></div>
         <div id="selection">
-          <label for="monthSelect">Date:</label>
-          <select id="monthSelect"></select>
+          <h2>Available years:</h2>
+          <label for="yearSelect">Year:</label>
+          <select id="yearSelect"></select>
         </div>
         <div id="temperatureTable"></div>
         <div id="chartContainer">
+          <h2>Time series for selected locations</h2>
           <canvas id="temperatureChart"></canvas>
         </div>
       </div>
     </div>
-    <script type="module" src="./map-viewer.js"></script>
+    <footer>
+      <p>&copy; 2024 Temperature Visualization Project CZU. All rights reserved.</p>
+    </footer>
+    <script type="module" src="./map-viewer2.js"></script>
   </body>
 </html>

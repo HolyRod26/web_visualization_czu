@@ -12,6 +12,8 @@ import { Style, Stroke, Fill, Text, Circle } from "ol/style";
 import GeoJSON from "ol/format/GeoJSON";
 import { Select } from "ol/interaction";
 import { click } from "ol/events/condition";
+import Chart from 'chart.js/auto';
+
 
 // Fetch and process temperature data
 let temperatures = new Map();
