@@ -3,22 +3,34 @@ import "./styles.css";
 import { Map as OlMap, View } from "ol";
 import { fromLonLat } from "ol/proj";
 import TileLayer from "ol/layer/Tile";
-import Image from "ol/layer/Image";
 import OSM from "ol/source/OSM";
-import ImageWMS from "ol/source/ImageWMS";
 import VectorSource from "ol/source/Vector";
 import VectorLayer from "ol/layer/Vector";
-import { Style, Stroke, Fill, Text, Circle } from "ol/style";
+import { Style, Stroke, Fill, Circle } from "ol/style";
 import GeoJSON from "ol/format/GeoJSON";
 import { Select } from "ol/interaction";
 import { click } from "ol/events/condition";
+import Chart from "chart.js/auto";
+
+function populateYearSelect() {
+  const yearSelect = document.getElementById("yearSelect");
+  const years = Array.from(temperatures.keys()).map((date) =>
+    date.split("-")[0]
+  );
+  const uniqueYears = Array.from(new Set(years)).sort();
+
+  uniqueYears.forEach((year) => {
+    const option = document.createElement("option");
+    option.value = year;
+    option.textContent = year;
+    yearSelect.appendChild(option);
+  });
+}
 
 // Fetch and process temperature data
 let temperatures = new Map();
-
 try {
   const response = await fetch("data/temperatures.json");
-
   if (!response.ok) {
     throw new Error(`Data request failed with status ${response.status}`);
   }
@@ -31,10 +43,12 @@ try {
     }
     temperatures.get(time).set(location, value);
   }
-  console.log(temperatures);
+  populateYearSelect();
 } catch (error) {
   console.error("Error fetching temperature data:", error);
 }
+
+let currentMonth = "1950-01-01";
 
 // Vector sources
 const locationsSource = new VectorSource({
@@ -42,217 +56,151 @@ const locationsSource = new VectorSource({
   format: new GeoJSON(),
 });
 
-const countriesSource = new VectorSource({
-  url: "data/countries.geojson",
-  format: new GeoJSON(),
-});
-
-// Styling for countries and locations
-const countriesStyle = new Style({
-  stroke: new Stroke({
-    color: "#bd3939",
-    width: 3,
-  }),
-  text: new Text({
-    font: "18px sans-serif",
-    fill: new Fill({ color: "#bd3939" }),
-    stroke: new Stroke({ color: "#fff", width: 3 }),
-  }),
-});
-
+// Styling for locations
 const getLocationsStyle = (isSelected) =>
   new Style({
     image: new Circle({
-      radius: 15,
-      fill: new Fill({ color: isSelected ? "pink" : "navy" }),
+      radius: 15, // Keep the radius constant
+      fill: new Fill({
+        color: isSelected ? "rgba(0, 128, 0, 0.8)" : "rgba(0, 0, 128, 1)", // Lower opacity when selected
+      }),
       stroke: new Stroke({ color: "white", width: 4 }),
-    })
-});
+    }),
+  });
 
 // Layers for map visualization
 const locationsLayer = new VectorLayer({
   source: locationsSource,
-  style: getLocationsStyle(false),
-});
-
-const countriesLayer = new VectorLayer({
-  source: countriesSource,
+  // Style logic now depends on checking selectedLocationNames
   style: (feature) => {
-    countriesStyle.getText().setText(feature.get("name"));
-    return countriesStyle;
+    const rawLocationName = feature.getProperties().name;
+    const normalizedLocationName = normalizeName(rawLocationName);
+    const isSelected = selectedLocationNames.has(normalizedLocationName);
+    return getLocationsStyle(isSelected);
   },
 });
 
 // Map initialization
 const map = new OlMap({
   target: "map",
-  layers: [
-    new TileLayer({ source: new OSM() }),
-    countriesLayer,
-    locationsLayer,
-  ],
+  layers: [new TileLayer({ source: new OSM() }), locationsLayer],
   view: new View({
     center: fromLonLat([15, 50]),
     zoom: 7.5,
   }),
 });
 
+// Initialize a Set to keep track of selected location names
+let selectedLocationNames = new Set();
+
+const selectClick = new Select({
+  condition: click,
+  toggleCondition: click,
+  layers: [locationsLayer],
+  multi: true, // Allow multiple selections
+});
+
+map.addInteraction(selectClick);
+
+// Modify the event listener for selecting a location
+selectClick.on("select", (e) => {
+  // Mark locations as selected
+  e.selected.forEach((feature) => {
+    const rawLocationName = feature.getProperties().name;
+    const normalizedLocationName = normalizeName(rawLocationName);
+    selectedLocationNames.add(normalizedLocationName);
+  });
+
+  // Unmark locations as deselected
+  e.deselected.forEach((feature) => {
+    const rawLocationName = feature.getProperties().name;
+    const normalizedLocationName = normalizeName(rawLocationName);
+    selectedLocationNames.delete(normalizedLocationName);
+  });
+
+  // After updating selectedLocationNames, re-render the map layer
+  locationsLayer.changed();
+
+  // Pass updated selectedLocationNames as an array to the chart
+  displayTemperatureChart([...selectedLocationNames]);
+});
+
 function normalizeName(name) {
-  // Removes diacritics, converts to lowercase, and replaces spaces with underscores
   return name
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\s+/g, "_"); // Replaces one or more spaces with an underscore
+    .replace(/\s+/g, "_");
 }
 
-// Interaction for selecting locations
-const selectClick = new Select({
-  condition: click,
-  style: getLocationsStyle(true),
-  layers: [locationsLayer],
-});
-map.addInteraction(selectClick);
-
-// Event listener for selecting a location
-selectClick.on("select", (e) => {
-  if (
-    e.selected.length === 1 &&
-    locationsLayer.getSource().getFeatures().includes(e.selected[0])
-  ) {
-    const feature = e.selected[0];
-    const rawLocationName = feature.getProperties().name;
-    const normalizedLocationName = normalizeName(rawLocationName);
-
-    console.log("Original location name:", rawLocationName);
-    console.log("Normalized location name:", normalizedLocationName);
-
-    document.querySelector(
-      "#info"
-    ).innerHTML = `<p>Selected location: ${rawLocationName}</p>`;
-    displayTemperatureChart(normalizedLocationName);
-  }
-});
-
-// Function to display temperature chart for the selected location
-function displayTemperatureChart(locationName) {
+function displayTemperatureChart(locationNames) {
   const ctx = document.getElementById("temperatureChart").getContext("2d");
-
-  // Extract the year from currentMonth
   const currentYear = currentMonth.split("-")[0];
-
-  // Extract labels and corresponding temperature data for the specific year
   const labels = [...temperatures.keys()].filter((date) =>
     date.startsWith(currentYear)
   );
-  const tempData = labels.map((date) => {
-    const locationData = temperatures.get(date);
-    const temperature = locationData ? locationData.get(locationName) : null;
-    return temperature !== undefined ? temperature : null;
+
+  // Define the color palette
+  const colorPalette = [
+    "#1b9e77",
+    "#d95f02",
+    "#7570b3",
+    "#e7298a",
+    "#66a61e",
+  ];
+
+  const datasets = locationNames.map((locationName, index) => {
+    const tempData = labels.map((date) => {
+      const locationData = temperatures.get(date);
+      const temperature = locationData
+        ? Number(locationData.get(locationName)).toFixed(0)
+        : null;
+      return temperature !== undefined ? temperature : null;
+    });
+
+    // Get the corresponding color from the palette
+    const borderColor = colorPalette[index % colorPalette.length];
+    const backgroundColor = `${borderColor}4D`; // Add transparency using HEX '4D'
+
+    return {
+      label: `Temperature in ${locationName}`,
+      backgroundColor: backgroundColor,
+      borderColor: borderColor,
+      data: tempData,
+      fill: false,
+    };
   });
 
-  // Prepare chart data
   const chartData = {
     labels: labels,
-    datasets: [
-      {
-        label: `Temperature in ${locationName}`,
-        backgroundColor: "rgba(22, 35, 224, 0.3)",
-        borderColor: "rgb(22, 35, 224)",
-        data: tempData,
-        fill: false,
-      },
-    ],
+    datasets: datasets,
   };
 
-  // Destroy existing chart instance if any
   if (window.temperatureChart instanceof Chart) {
     window.temperatureChart.destroy();
   }
 
-  // Create a new chart instance
   window.temperatureChart = new Chart(ctx, {
     type: "line",
     data: chartData,
     options: {
       responsive: true,
       scales: {
-        x: {
-          title: {
-            display: true,
-            text: "Date",
-          },
-        },
-        y: {
-          title: {
-            display: true,
-            text: "Temperature (°C)",
-          },
-        },
+        x: { title: { display: true, text: "Date" } },
+        y: { title: { display: true, text: "Temperature (°C)" } },
       },
       plugins: {
-        legend: {
-          display: true,
-        },
+        legend: { display: true },
       },
     },
   });
 }
 
-// Populate month select dropdown
-for (const date of temperatures.keys()) {
-  const option = document.createElement("option");
-  option.setAttribute("value", date);
-  option.innerHTML = date;
-  document.getElementById("monthSelect").appendChild(option);
-}
-
-// Initialize currentMonth and update table when features are loaded
-let currentMonth = "1950-01-01";
-
-const setCurrentMonth = function (month) {
-  currentMonth = month;
-  updateTemperatureTable();
-  locationsLayer.changed(); // Update the map with the current month
-};
-
-// Event listener for month selection change
-document.querySelector("#monthSelect").addEventListener("change", function (e) {
-  setCurrentMonth(e.target.value);
-
-  // Get the selected feature (if any) from the Select interaction
-  const selectedFeatures = selectClick.getFeatures().getArray();
-  if (selectedFeatures.length === 1) {
-    const feature = selectedFeatures[0];
-    const rawLocationName = feature.getProperties().name;
-    const normalizedLocationName = normalizeName(rawLocationName);
-
-    // Update the chart with the new month/year data
-    displayTemperatureChart(normalizedLocationName);
-  }
-});
-
-const updateTemperatureTable = function () {
-  const features = locationsLayer.getSource().getFeatures();
-  let featuresValuesText =
-    "<table><tr><th>Location</th><th>Temperature (°C)</th></tr>";
-
-  for (const feature of features) {
-    const temperature = temperatures
-      .get(currentMonth)
-      .get(feature.getProperties().id)
-      .toFixed(0);
-    featuresValuesText += `<tr><td>${
-      feature.getProperties().name
-    }</td><td>${temperature} °C</td></tr>`;
-  }
-  featuresValuesText += "</table>";
-
-  // Set the table content in the HTML element
-  document.getElementById("temperatureTable").innerHTML = featuresValuesText;
-};
-
-// Wait for features to load and initialize the table
-locationsLayer.getSource().on("featuresloadend", function (e) {
-  setCurrentMonth(currentMonth); // Use first time of the series
-});
+// Add event listener for year selection change
+document
+  .getElementById("yearSelect")
+  .addEventListener("change", (event) => {
+    const selectedYear = event.target.value;
+    currentMonth = `${selectedYear}-01-01`;
+    displayTemperatureChart([...selectedLocationNames]);
+  });

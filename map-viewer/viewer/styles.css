@@ -1,52 +1,145 @@
 @import "./node_modules/ol/ol.css";
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap'); /* Importing Roboto font */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
 
 html, body {
-margin: 0;
-height: 100%;
-display: flex;
-flex-direction: column;
-font-family: 'Roboto', sans-serif; /* Applying Roboto font to the entire page */
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: 'Roboto', sans-serif;
+  color: #333;
+}
+
+header {
+  background-color: #8ecae6; /* Softer blue tone for banner */
+  color: #333; /* Darker text for contrast */
+  text-align: center;
+  padding: 15px 0;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+header h1 {
+  margin: 0;
+  font-weight: 500;
+  font-size: 1.8rem;
 }
 
 #content {
-display: flex;
-flex: 1;
-overflow: hidden;
+  display: flex;
+  flex-direction: row;
+  height: calc(100% - 85px); /* Adjust height considering header and footer */
 }
 
-#sideContent, #map {
-width: 50%;
-overflow: auto;
+#map {
+  width: 50%; /* Map now takes 50% of the width */
+  height: 100%; /* Ensures it covers the full height of its parent section */
+  background-color: #e0e0e0; /* Subtle placeholder color */
+  border-right: 1px solid #ddd; /* Subtle separation line between map and sidebar */
 }
 
-#info, #selection, #temperatureTable, #chartContainer {
-margin: 20px;
+#sideContent {
+  width: 50%; /* Sidebar now shares the other 50% */
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  background-color: #f5f8fa; /* Softer light background */
+  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
+  border-left: 1px solid #ddd; /* Subtle left border for better definition */
+}
+
+#sideContent > div {
+  padding: 20px;
+}
+
+#selection {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+#selection h2 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 1.2rem;
+  text-align: center;
+  color: black; 
+}
+
+label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: #555;
+}
+
+select {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 20px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  background: #fff;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 #temperatureTable {
-background-color: #f9f9f9; /* Light grey background */
-border-radius: 8px; /* Rounded corners */
-box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow */
-padding: 10px; /* Internal padding */
-border-collapse: collapse;
-overflow: hidden;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  padding: 15px;
 }
 
 #temperatureTable th, #temperatureTable td {
-padding: 12px; /* Padding inside table cells */
-border-bottom: 1px solid #ddd; /* Bottom border for table rows */
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
 }
 
 #temperatureTable th {
-background-color: #e0e0e0; /* Subtle background for headers */
-font-weight: 500; /* Medium font weight */
+  background-color: #219ebc; /* Subtle blue for headers */
+  color: white;
+  font-weight: 600; /* Slightly bolder font */
 }
 
 #temperatureTable tr:hover {
-background-color: #f1f1f1; /* Background change on hover */
+  background-color: #f1f1f1;
 }
 
 #chartContainer {
-padding: 20px;
+  width: 100%;
+  height: 70%;
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 20px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+#chartContainer h2 {
+  text-align: center;
+  font-size: 1.2rem;
+  color: #219ebc; /* Subtle blue for headers */
+}
+
+footer {
+  background-color: #8ecae6; /* Softer banner color for footer */
+  color: #333; /* Darker text for readability */
+  text-align: center;
+  padding: 10px 0;
+  font-size: 0.9rem;
+  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 768px) {
+  #content {
+    flex-direction: column;
+  }
+
+  #map, #sideContent {
+    width: 100%;
+    height: auto; /* Adjusts height dynamically for smaller screens */
+  }
 }
