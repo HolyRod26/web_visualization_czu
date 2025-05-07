@@ -66,8 +66,8 @@ const getLocationsStyle = (isSelected) =>
       radius: 15,
       fill: new Fill({ color: isSelected ? "pink" : "navy" }),
       stroke: new Stroke({ color: "white", width: 4 }),
-    }),
-  });
+    })
+});
 
 // Layers for map visualization
 const locationsLayer = new VectorLayer({
@@ -127,8 +127,8 @@ selectClick.on("select", (e) => {
     console.log("Original location name:", rawLocationName);
     console.log("Normalized location name:", normalizedLocationName);
 
-    document.getElementById(
-      "info"
+    document.querySelector(
+      "#info"
     ).innerHTML = `<p>Selected location: ${rawLocationName}</p>`;
     displayTemperatureChart(normalizedLocationName);
   }
@@ -157,8 +157,8 @@ function displayTemperatureChart(locationName) {
     datasets: [
       {
         label: `Temperature in ${locationName}`,
-        backgroundColor: "rgba(255, 99, 132, 0.2)",
-        borderColor: "rgba(255, 99, 132, 1)",
+        backgroundColor: "rgba(22, 35, 224, 0.3)",
+        borderColor: "rgb(22, 35, 224)",
         data: tempData,
         fill: false,
       },
@@ -217,7 +217,7 @@ const setCurrentMonth = function (month) {
 };
 
 // Event listener for month selection change
-document.getElementById("monthSelect").addEventListener("change", function (e) {
+document.querySelector("#monthSelect").addEventListener("change", function (e) {
   setCurrentMonth(e.target.value);
 
   // Get the selected feature (if any) from the Select interaction
@@ -241,7 +241,7 @@ const updateTemperatureTable = function () {
     const temperature = temperatures
       .get(currentMonth)
       .get(feature.getProperties().id)
-      .toFixed(2);
+      .toFixed(0);
     featuresValuesText += `<tr><td>${
       feature.getProperties().name
     }</td><td>${temperature} °C</td></tr>`;
