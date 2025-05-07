@@ -84,8 +84,8 @@ const map = new OlMap({
   }),
 });
 
-// Initialize an array to keep track of selected location names
-let selectedLocationNames = [];
+// Initialize a Set to keep track of selected location names
+let selectedLocationNames = new Set();
 
 const selectClick = new Select({
   condition: click,
@@ -100,25 +100,22 @@ map.addInteraction(selectClick);
 selectClick.on("select", (e) => {
   e.selected.forEach((feature) => {
     feature.set("isSelected", true);
-    feature.changed
+    feature.changed();
     const rawLocationName = feature.getProperties().name;
     const normalizedLocationName = normalizeName(rawLocationName);
-    if (!selectedLocationNames.includes(normalizedLocationName)) {
-      selectedLocationNames.push(normalizedLocationName);
-    }
+    selectedLocationNames.add(normalizedLocationName); // Add location name to the Set
   });
 
   e.deselected.forEach((feature) => {
     feature.set("isSelected", false);
+    feature.changed();
     const rawLocationName = feature.getProperties().name;
     const normalizedLocationName = normalizeName(rawLocationName);
-    const index = selectedLocationNames.indexOf(normalizedLocationName);
-    if (index > -1) {
-      selectedLocationNames.splice(index, 1);
-    }
+    selectedLocationNames.delete(normalizedLocationName); // Remove location name from the Set
   });
 
-  displayTemperatureChart(selectedLocationNames);
+  // Convert the Set to an array when passing it to displayTemperatureChart
+  displayTemperatureChart([...selectedLocationNames]);
 });
 
 function normalizeName(name) {
@@ -148,7 +145,9 @@ function displayTemperatureChart(locationNames) {
   const datasets = locationNames.map((locationName, index) => {
     const tempData = labels.map((date) => {
       const locationData = temperatures.get(date);
-      const temperature = locationData ? Number(locationData.get(locationName)).toFixed(0) : null;
+      const temperature = locationData
+        ? Number(locationData.get(locationName)).toFixed(0)
+        : null;
       return temperature !== undefined ? temperature : null;
     });
 
@@ -163,7 +162,7 @@ function displayTemperatureChart(locationNames) {
       data: tempData,
       fill: false,
     };
-});
+  });
 
   const chartData = {
     labels: labels,
@@ -196,5 +195,6 @@ document
   .addEventListener("change", (event) => {
     const selectedYear = event.target.value;
     currentMonth = `${selectedYear}-01-01`; // Set the selected year
-    displayTemperatureChart(selectedLocationNames); // Update the chart
+    // Pass the Set as an array to the chart
+    displayTemperatureChart([...selectedLocationNames]);
   });
