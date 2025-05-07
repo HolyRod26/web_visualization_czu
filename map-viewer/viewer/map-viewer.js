@@ -6,7 +6,7 @@ import TileLayer from "ol/layer/Tile";
 import OSM from "ol/source/OSM";
 import VectorSource from "ol/source/Vector";
 import VectorLayer from "ol/layer/Vector";
-import { Style, Stroke, Fill, Text, Circle } from "ol/style";
+import { Style, Stroke, Fill, Circle } from "ol/style";
 import GeoJSON from "ol/format/GeoJSON";
 import { Select } from "ol/interaction";
 import { click } from "ol/events/condition";
@@ -71,7 +71,13 @@ const getLocationsStyle = (isSelected) =>
 // Layers for map visualization
 const locationsLayer = new VectorLayer({
   source: locationsSource,
-  style: (feature) => getLocationsStyle(feature.get("isSelected") || false),
+  // Style logic now depends on checking selectedLocationNames
+  style: (feature) => {
+    const rawLocationName = feature.getProperties().name;
+    const normalizedLocationName = normalizeName(rawLocationName);
+    const isSelected = selectedLocationNames.has(normalizedLocationName);
+    return getLocationsStyle(isSelected);
+  },
 });
 
 // Map initialization
@@ -98,23 +104,24 @@ map.addInteraction(selectClick);
 
 // Modify the event listener for selecting a location
 selectClick.on("select", (e) => {
+  // Mark locations as selected
   e.selected.forEach((feature) => {
-    feature.set("isSelected", true);
-    feature.changed();
     const rawLocationName = feature.getProperties().name;
     const normalizedLocationName = normalizeName(rawLocationName);
-    selectedLocationNames.add(normalizedLocationName); // Add location name to the Set
+    selectedLocationNames.add(normalizedLocationName);
   });
 
+  // Unmark locations as deselected
   e.deselected.forEach((feature) => {
-    feature.set("isSelected", false);
-    feature.changed();
     const rawLocationName = feature.getProperties().name;
     const normalizedLocationName = normalizeName(rawLocationName);
-    selectedLocationNames.delete(normalizedLocationName); // Remove location name from the Set
+    selectedLocationNames.delete(normalizedLocationName);
   });
 
-  // Convert the Set to an array when passing it to displayTemperatureChart
+  // After updating selectedLocationNames, re-render the map layer
+  locationsLayer.changed();
+
+  // Pass updated selectedLocationNames as an array to the chart
   displayTemperatureChart([...selectedLocationNames]);
 });
 
@@ -194,7 +201,6 @@ document
   .getElementById("yearSelect")
   .addEventListener("change", (event) => {
     const selectedYear = event.target.value;
-    currentMonth = `${selectedYear}-01-01`; // Set the selected year
-    // Pass the Set as an array to the chart
+    currentMonth = `${selectedYear}-01-01`;
     displayTemperatureChart([...selectedLocationNames]);
   });
